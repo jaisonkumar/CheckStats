@@ -1,1 +1,1 @@
-https://jaisonkumar.github.io/CheckStats/
+https://poetic-moonbeam-865ee8.netlify.app/
