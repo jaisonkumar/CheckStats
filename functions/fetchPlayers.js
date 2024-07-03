@@ -1,17 +1,39 @@
-// functions/fetchPlayers.js
-
-import fetch from 'node-fetch';
 import { writeFile } from 'fs/promises';
+import https from 'https';
 
 const TITLES = ["GM", "WGM", "IM", "WIM", "FM", "WFM", "NM", "WNM", "CM", "WCM"];
 
 const fetchTitledPlayers = async (title) => {
-    const response = await fetch(`https://api.chess.com/pub/titled/${title}`);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch titled players for ${title}`);
-    }
-    const data = await response.json();
-    return data.players;
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'api.chess.com',
+            path: `/pub/titled/${title}`,
+            method: 'GET',
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                try {
+                    const jsonData = JSON.parse(data);
+                    resolve(jsonData.players);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        });
+
+        req.on('error', (error) => {
+            reject(error);
+        });
+
+        req.end();
+    });
 };
 
 const storeData = async (data, dateTime) => {
