@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Leaderboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Days+One&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="bg">
+        <nav>
+            <div class="nav-logo"></div>
+            <div class="nav-items">
+                <div class="nav-about"><a href="#about">ABOUT</a></div>
+                <div class="nav-contact"><a href="#contact">CONTACT US</a></div>
+                <div class="nav-connect">
+                    <a href="#">LEADERBOARD</a>
+                </div>
+            </div>
+        </nav>
+
+        <div id="about">
+            <p class="about-text">Chess Leaderboard</p>
+            <p class="about-side-text">Select a platform and time format to view the top 20 players.</p>
+            <div class="input-box">
+                <select id="platform-selector" onchange="fetchLeaderboard()">
+                    <option value="lichess">Lichess</option>
+                    <option value="chesscom">Chess.com</option>
+                </select>
+                <select id="time-format-selector" style="display: none;" onchange="fetchLeaderboard()">
+                    <option value="bullet">Bullet</option>
+                    <option value="blitz" selected>Blitz</option>
+                    <option value="rapid">Rapid</option>
+                    <option value="classical">Classical</option>
+                </select>
+                <select id="category-selector" style="display: none;" onchange="fetchLeaderboard()">
+                    <option value="daily">Daily</option>
+                    <option value="daily960">Daily 960</option>
+                    <option value="live_rapid">Live Rapid</option>
+                    <option value="live_blitz" selected>Live Blitz</option>
+                    <option value="live_bullet">Live Bullet</option>
+                </select>
+            </div>
+            <div id="leaderboard">
+                <!-- Leaderboard will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="leaderboard.js"></script>
+</body>
+</html>
