@@ -1,0 +1,229 @@
+/* styles.css */
+
+/* Global reset */
+body, html {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0; /* Default background color */
+    overflow-x: hidden; /* Prevent horizontal overflow */
+}
+
+/* Navigation */
+nav {
+    height: 80px;
+    text-align: center;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    color: rgb(68, 79, 90);
+    font-family: 'Days One', sans-serif;
+    font-size: 30px;
+}
+
+.nav-items {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.nav-logo {
+    background-image: url("logo2.png");
+    background-size: cover;
+    height: 50px;
+    width: 300px;
+    margin-top: 40px;
+}
+
+.nav-about, .nav-contact {
+    margin: 60px 30px;
+}
+
+.nav-about a, .nav-contact a {
+    text-decoration: none;
+    color: inherit; /* Ensures the link color is the same as the surrounding text */
+}
+
+/* Background */
+.bg {
+    background-image: url("bg2.jpg");
+    background-size: cover;
+    height: 100vh; /* Adjusted to full viewport height */
+    width: 100%;
+    position: relative;
+    overflow-x: hidden; /* Prevent horizontal overflow */
+    overflow-y: auto; /* Enable vertical scrolling */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Added box shadow for floating effect */
+}
+
+/* Connect Section */
+.nav-connect {
+    margin: 60px 30px;
+}
+
+/* Header */
+header {
+    background-size: cover;
+    text-align: center;
+    color: white;
+    padding: 100px 0;
+}
+
+/* Buttons */
+.buttons {
+    text-align: center;
+    margin-top: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Main Body */
+.main-body {
+    margin-top: 200px;
+    margin-left: 50px;
+    height: 500px;
+}
+
+.main-text {
+    color: #333333;
+    font-size: 30px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+}
+
+.side-text {
+    width: 800px;
+    color: #333333;
+    font-size: 25px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+}
+
+/* About Section */
+#about {
+    margin-left: 50px;
+}
+
+.about-text { 
+    font-family: 'Days One', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.about-side-text {
+    width: 1000px;
+    color: #333333;
+    font-size: 25px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+}
+
+/* Input Box and Form Elements */
+.input-box {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+
+input, select {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+}
+
+/* Table Styles */
+table {
+    width: 90%; /* Reduced width for better fit */
+    border-collapse: collapse;
+    margin: 20px auto; /* Centering the table */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Added box shadow for floating effect */
+    background-color: rgba(255, 255, 255, 0.9); /* Table background color */
+    overflow: hidden; /* Prevent box shadow from being clipped */
+}
+
+thead {
+    background-color: #d6d0c7; /* Table header background color */
+    color: white;
+    font-size: 18px; /* Header font size */
+}
+
+thead th {
+    padding: 12px;
+    text-align: left;
+}
+
+tbody td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+th, td {
+    border: 1px solid #ddd;
+}
+
+/* Hover effect on table data */
+tbody td:hover {
+    background-color: #cdcdcd5d; /* Slight pink hover effect */
+}
+
+/* Remove underline and change color for username links */
+a {
+    text-decoration: none; /* Remove underline */
+    color: #333333; /* Default link color */
+}
+
+a:hover {
+    color: #0056b3; /* Hover color */
+}
+
+#time-format-selector{
+    border-radius: 8px;
+    border-color: #818181;
+    background-color: #ffffffa4;
+    border-width: 00.01px;
+    font-family: Poppins;
+    margin-left: 75px;
+}
+
+#platform-selector{
+    border-radius: 8px;
+    border-color: #818181;
+    background-color: #ffffffa4;
+    border-width: 00.01px;
+    font-family: Poppins;
+    margin-left: 75px;
+}
+
+#category-selector{
+    border-radius: 8px;
+    border-color: #818181;
+    background-color: #ffffffa4;
+    border-width: 00.01px;
+    font-family: Poppins;
+    margin-left: 75px;
+}
+/* Responsive Styles */
+@media (max-width: 600px) {
+    table {
+        font-size: 14px;
+    }
+}
