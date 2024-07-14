@@ -1,69 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Website Coming Soon Page</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="language-css.css" />
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Website</title>
+    <link rel="stylesheet" href="final.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Days+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="bg">
         <nav>
-            <div class="nav-logo"></div>
+            <a href="/"><div class="nav-logo"></div></a>
             <div class="nav-items">
-                <!-- <div class="nav-about"><a href="#about">ABOUT</a></div>
-                <div class="nav-contact"><a href="#about">CONTACT US</a></div> -->
-                <div class="nav-connect"><a href="#coming-soon">COMING SOON! </a></div>
+                <div class="nav-about"><a href="#about">ABOUT</a></div>
+                <div class="nav-contact"><a href="#contact">CONTACT US</a></div>
+                <div class="nav-connect"><p><a href="leaderboard/">LEADERBOARD</a></p></div>
             </div>
         </nav>
 
         <div class="main-body">
             <p class="main-text">Unlock insights into your chess journey with our detailed analysis!</p>
             <p class="side-text">Discover your strengths, track your progress, and elevate your game. Dive into personalized statistics and make every move count!</p>
-        </div>
-        <!-- <div id="about">
-            <p class="about-text">About Us</p>
-            <p class="about-side-text">Welcome to CheckStats! Our mission is to help chess enthusiasts like you improve their game through detailed analysis and personalized insights. Track your performance, understand your strengths, and make informed moves. Join us in making your chess journey smarter and more enjoyable!</p>
-        </div> -->
-        <section class="coming-soon" id="coming-soon">
-            <header>Coming Soon</header>
-            <p>Our website is under construction. We're working hard to improve our website and we'll be ready to launch soon.</p>
-            <div class="time-content">
-                <div class="time days">
-                    <span class="number"></span>
-                    <span class="text">days</span>
-                </div>
-                <div class="time hours">
-                    <span class="number"></span>
-                    <span class="text">hours</span>
-                </div>
-                <div class="time minutes">
-                    <span class="number"></span>
-                    <span class="text">minutes</span>
-                </div>
-                <div class="time seconds">
-                    <span class="number"></span>
-                    <span class="text">seconds</span>
-                </div>
+            <div class="form-group">
+                <a href="#" class="myButton">Continue with Lichess</a>
+                <p class="side-text or-text">Or</p>
             </div>
-            <!-- <div class="email-content">
-                <p>Subscribe now to get the latest updates!</p>
-                <div class="input-box">
-                    <input type="email" placeholder="Enter your email" />
-                    <button>Notify Me</button>
-                </div>
-            </div> -->
-        </section>
+            <div class="input-group">
+                <input class="input" type="text" placeholder="Enter Your Username">
+                <a href="#" class="goButton">Go</a>
+            </div>
+        </div>
+        <div id="about">
+            <p class="about-text">About</p>
+            <p class="about-side-text">Welcome to CheckStats! Our mission is to help chess enthusiasts like you improve their game through detailed analysis and personalized insights. Track your performance, understand your strengths, and make informed moves. Join us in making your chess journey smarter and more enjoyable!</p>
+        </div>
+        <div id="contact">
+            <p class="about-text">Contact Us</p>
+            <p class="about-side-text">Coming Soon</p>
+        </div>
     </div>
-
-    <!-- JavaScript -->
-    <script src="js/script.js"></script>
 </body>
+
 </html>
