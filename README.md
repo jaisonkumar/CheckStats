@@ -1,1 +1,1 @@
-checkstats.site
+https://checkstats.site
