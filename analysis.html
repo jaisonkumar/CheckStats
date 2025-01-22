@@ -38,9 +38,9 @@
             margin-top: 30px;
         }
 
-        .chart-container canvas {
-            width: 100%;
-            height: 400px;
+        .search-bar {
+            margin-bottom: 20px;
+            text-align: center;
         }
     </style>
 </head>
@@ -48,6 +48,13 @@
 <body>
     <div class="container">
         <h1>Player Analysis</h1>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input id="usernameInput" type="text" class="form-control" placeholder="Enter username" style="width: 50%; margin: 0 auto;">
+            <button id="searchButton" class="btn btn-primary mt-2">Search</button>
+        </div>
+
         <div id="playerStats" class="stats-card"></div>
 
         <!-- Graph Containers -->
@@ -59,56 +66,29 @@
             <h3>Playtime Distribution</h3>
             <canvas id="playtimeChart"></canvas>
         </div>
-        <div class="chart-container">
-            <h3>Rating History (Monthly Average)</h3>
-            <canvas id="ratingHistoryChart"></canvas>
-        </div>
     </div>
 
     <script>
-        const apiData = {
-            count: {
-                all: 9265,
-                rated: 7157,
-                ai: 531,
-                draw: 340,
-                drawH: 331,
-                loss: 4480,
-                lossH: 4207,
-                win: 4440,
-                winH: 4378,
-                bookmark: 71,
-                playing: 6,
-                import: 66,
-                me: 0
-            },
-            seenAt: 1522636452014,
-            patron: true,
-            verified: true,
-            playTime: {
-                total: 3296897,
-                tv: 12134
-            },
-            title: "NM",
-            url: "https://lichess.org/@/georges",
-            playing: "https://lichess.org/yqfLYJ5E/black",
-            profile: {
-                flag: "EC",
-                location: "string",
-                bio: "Free bugs!",
-                realName: "Thibault Duplessis",
-                fideRating: 1500,
-                uscfRating: 1500,
-                ecfRating: 1500,
-                cfcRating: 1500,
-                dsbRating: 1500,
-                links: "github.com/ornicar\r\nmas.to/@thibault"
-            },
-            ratingHistory: [
-                { name: "FIDE", points: [[2022, 0, 1, 2200], [2022, 1, 15, 2150], [2022, 3, 10, 2170], [2022, 6, 1, 2220], [2022, 8, 10, 2250]] },
-                { name: "USCF", points: [[2022, 0, 1, 2100], [2022, 3, 5, 2150], [2022, 5, 15, 2120], [2022, 8, 20, 2130]] },
-            ]
-        };
+        const searchButton = document.getElementById('searchButton');
+        const usernameInput = document.getElementById('usernameInput');
+
+        // Function to fetch player data based on the username
+        async function fetchPlayerData(username) {
+            const url = `https://lichess.org/api/user/${username}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Player not found or invalid username');
+                }
+                const data = await response.json();
+                console.log(data); // Debug: log the fetched data
+                return data;
+            } catch (error) {
+                console.error(error);
+                alert(error.message); // Show error in alert
+                return null;
+            }
+        }
 
         // Display player stats
         function displayStats(data) {
@@ -169,67 +149,20 @@
             });
         }
 
-        // Display graph for rating history (monthly averages)
-        function displayGraph(data, ratingType) {
-            const ratingData = data.ratingHistory.find((d) => d.name === ratingType);
-            if (!ratingData) return;
-
-            const monthlyData = {};
-            ratingData.points.forEach(([year, month, day, rating]) => {
-                const key = `${year}-${String(month + 1).padStart(2, '0')}`;
-                if (!monthlyData[key]) monthlyData[key] = [];
-                monthlyData[key].push(rating);
-            });
-
-            const labels = Object.keys(monthlyData).sort();
-            const ratings = labels.map(
-                (key) => Math.round(monthlyData[key].reduce((sum, r) => sum + r, 0) / monthlyData[key].length)
-            );
-
-            const ctx = document.getElementById("ratingHistoryChart").getContext("2d");
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: `${ratingType} Ratings (Monthly Average)`,
-                        data: ratings,
-                        borderColor: '#36A2EB',
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        pointBackgroundColor: '#FF6384',
-                        tension: 0.4,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true, position: 'top' },
-                        tooltip: { enabled: true },
-                    },
-                    scales: {
-                        x: {
-                            title: { display: true, text: 'Month', font: { size: 14 } },
-                            grid: { display: false },
-                            ticks: { autoSkip: true, maxTicksLimit: 12 },
-                        },
-                        y: {
-                            title: { display: true, text: 'Rating', font: { size: 14 } },
-                            grid: { color: 'rgba(200, 200, 200, 0.3)' },
-                        }
-                    }
+        // Search button click handler
+        searchButton.addEventListener('click', async () => {
+            const username = usernameInput.value.trim();
+            if (username) {
+                const playerData = await fetchPlayerData(username);
+                if (playerData) {
+                    displayStats(playerData);
+                    renderResultsChart(playerData);
+                    renderPlaytimeChart(playerData);
                 }
-            });
-        }
-
-        // Initialize display
-        displayStats(apiData);
-        renderResultsChart(apiData);
-        renderPlaytimeChart(apiData);
-        displayGraph(apiData, "FIDE");
+            } else {
+                alert("Please enter a username");
+            }
+        });
 
     </script>
 </body>
