@@ -152,6 +152,7 @@
                 }
                 yearCounts[year]++;
             });
+            console.log("Games Per Year Data:", yearCounts); // Debugging log
             return yearCounts;
         }
 
@@ -173,6 +174,7 @@
                 results.WinPercentage = results.LossPercentage = results.DrawPercentage = 0;
             }
 
+            console.log("Win/Loss Data:", results); // Debugging log
             return results;
         }
 
@@ -181,6 +183,7 @@
             games.forEach(game => {
                 colors[game.color]++;
             });
+            console.log("Calculated Color Performance:", colors); // Debugging log
             return colors;
         }
 
