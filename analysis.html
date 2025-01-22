@@ -21,7 +21,7 @@
             padding: 20px;
         }
 
-        h1 {
+        h1, h3 {
             text-align: center;
             margin-bottom: 20px;
         }
@@ -45,76 +45,122 @@
         <h1>Player Analysis</h1>
         <div id="playerStats" class="stats-card"></div>
 
-        <!-- Graph Container -->
+        <!-- Graph Containers -->
         <div class="chart-container">
-            <h3>Time Controls Distribution</h3>
-            <canvas id="timeControlChart"></canvas>
+            <h3>Game Results Distribution</h3>
+            <canvas id="resultsChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Playtime Distribution</h3>
+            <canvas id="playtimeChart"></canvas>
         </div>
     </div>
 
     <script>
-        // Extract the username from the query parameters
-        const params = new URLSearchParams(window.location.search);
-        const username = params.get('username');
+        // Mock data (replace with API fetch in real implementation)
+        const apiData = {
+            count: {
+                all: 9265,
+                rated: 7157,
+                ai: 531,
+                draw: 340,
+                drawH: 331,
+                loss: 4480,
+                lossH: 4207,
+                win: 4440,
+                winH: 4378,
+                bookmark: 71,
+                playing: 6,
+                import: 66,
+                me: 0
+            },
+            seenAt: 1522636452014,
+            patron: true,
+            verified: true,
+            playTime: {
+                total: 3296897,
+                tv: 12134
+            },
+            title: "NM",
+            url: "https://lichess.org/@/georges",
+            playing: "https://lichess.org/yqfLYJ5E/black",
+            profile: {
+                flag: "EC",
+                location: "string",
+                bio: "Free bugs!",
+                realName: "Thibault Duplessis",
+                fideRating: 1500,
+                uscfRating: 1500,
+                ecfRating: 1500,
+                cfcRating: 1500,
+                dsbRating: 1500,
+                links: "github.com/ornicar\r\nmas.to/@thibault"
+            }
+        };
 
-        if (!username) {
-            alert("No username provided. Redirecting to the homepage.");
-            window.location.href = "/";
-        } else {
-            fetch(`https://lichess.org/api/user/${username}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("User not found.");
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    displayAnalysis(data);
-                })
-                .catch(error => {
-                    alert(error.message);
-                    window.location.href = "/";
-                });
-        }
+        // Display player stats
+        function displayStats(data) {
+            const statsDiv = document.getElementById("playerStats");
+            const profile = data.profile;
 
-        function displayAnalysis(data) {
-            const statsDiv = document.getElementById('playerStats');
-            statsDiv.innerHTML = ` 
-                <h3>${data.username}</h3>
+            statsDiv.innerHTML = `
+                <h3>${profile.realName} (${data.title})</h3>
+                <p><strong>FIDE Rating:</strong> ${profile.fideRating}</p>
+                <p><strong>USCF Rating:</strong> ${profile.uscfRating}</p>
                 <p><strong>Total Games:</strong> ${data.count.all}</p>
-                <p><strong>Wins:</strong> ${data.count.win || 0}</p>
-                <p><strong>Losses:</strong> ${data.count.loss || 0}</p>
-                <p><strong>Draws:</strong> ${data.count.draw || 0}</p>
-                <p><strong>Time Controls:</strong> Bullet: ${data.perfs.bullet.games || 0}, Blitz: ${data.perfs.blitz.games || 0}, 
-                Rapid: ${data.perfs.rapid.games || 0}, Classical: ${data.perfs.classical.games || 0}</p>
+                <p><strong>Wins:</strong> ${data.count.win}</p>
+                <p><strong>Losses:</strong> ${data.count.loss}</p>
+                <p><strong>Draws:</strong> ${data.count.draw}</p>
+                <p><strong>Total Playtime:</strong> ${(data.playTime.total / 3600).toFixed(2)} hours</p>
+                <p><strong>Verified:</strong> ${data.verified ? "Yes" : "No"}</p>
+                <a href="${data.url}" target="_blank">Lichess Profile</a>
             `;
-
-            const timeControls = {
-                Bullet: data.perfs.bullet.games || 0,
-                Blitz: data.perfs.blitz.games || 0,
-                Rapid: data.perfs.rapid.games || 0,
-                Classical: data.perfs.classical.games || 0,
-                Correspondence: data.perfs.correspondence ? data.perfs.correspondence.games : 0
-            };
-
-            renderTimeControlChart(timeControls);
         }
 
-        function renderTimeControlChart(data) {
-            const ctx = document.getElementById('timeControlChart').getContext('2d');
+        // Render game results chart
+        function renderResultsChart(data) {
+            const ctx = document.getElementById("resultsChart").getContext("2d");
             new Chart(ctx, {
-                type: 'pie',
+                type: "pie",
                 data: {
-                    labels: Object.keys(data),
+                    labels: ["Wins", "Losses", "Draws"],
                     datasets: [{
-                        label: 'Games Played by Time Control',
-                        data: Object.values(data),
-                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+                        data: [data.count.win, data.count.loss, data.count.draw],
+                        backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56"],
                     }]
                 },
                 options: { responsive: true }
             });
         }
+
+        // Render playtime chart
+        function renderPlaytimeChart(data) {
+            const ctx = document.getElementById("playtimeChart").getContext("2d");
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: ["Total Playtime (hours)", "TV Playtime (hours)"],
+                    datasets: [{
+                        data: [data.playTime.total / 3600, data.playTime.tv / 3600],
+                        backgroundColor: ["#4BC0C0", "#9966FF"],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: "Hours" }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize display
+        displayStats(apiData);
+        renderResultsChart(apiData);
+        renderPlaytimeChart(apiData);
     </script>
 </body>
 
