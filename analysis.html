@@ -1,167 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player Analysis</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Lichess Player Ratings</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 20px;
-        }
-
-        h1, h3 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .stats-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-
-        .chart-container {
-            margin-top: 30px;
-        }
-    </style>
+    <link rel="stylesheet" href="chart-css.css">
 </head>
-
 <body>
-    <div class="container">
-        <h1>Player Analysis</h1>
-        <div id="playerStats" class="stats-card"></div>
+    <h1>Lichess Player Ratings</h1>
+    <form id="username-form">
+        <label for="username">Enter Lichess Username:</label>
+        <input type="text" id="username" required>
+        <button type="submit">Fetch Ratings</button>
+    </form>
 
-        <!-- Graph Containers -->
-        <div class="chart-container">
-            <h3>Game Results Distribution</h3>
-            <canvas id="resultsChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <h3>Playtime Distribution</h3>
-            <canvas id="playtimeChart"></canvas>
-        </div>
+    <div id="selector">
+        <label for="rating-type">Select Rating Type:</label>
+        <select id="rating-type" disabled>
+            <option value="Bullet">Bullet</option>
+            <option value="Blitz">Blitz</option>
+            <option value="Rapid">Rapid</option>
+        </select>
     </div>
 
+    <canvas id="rating-chart"></canvas>
+
     <script>
-        // Mock data (replace with API fetch in real implementation)
-        const apiData = {
-            count: {
-                all: 9265,
-                rated: 7157,
-                ai: 531,
-                draw: 340,
-                drawH: 331,
-                loss: 4480,
-                lossH: 4207,
-                win: 4440,
-                winH: 4378,
-                bookmark: 71,
-                playing: 6,
-                import: 66,
-                me: 0
-            },
-            seenAt: 1522636452014,
-            patron: true,
-            verified: true,
-            playTime: {
-                total: 3296897,
-                tv: 12134
-            },
-            title: "NM",
-            url: "https://lichess.org/@/georges",
-            playing: "https://lichess.org/yqfLYJ5E/black",
-            profile: {
-                flag: "EC",
-                location: "string",
-                bio: "Free bugs!",
-                realName: "Thibault Duplessis",
-                fideRating: 1500,
-                uscfRating: 1500,
-                ecfRating: 1500,
-                cfcRating: 1500,
-                dsbRating: 1500,
-                links: "github.com/ornicar\r\nmas.to/@thibault"
+        const form = document.getElementById('username-form');
+        const usernameInput = document.getElementById('username');
+        const ratingTypeSelector = document.getElementById('rating-type');
+        const ctx = document.getElementById('rating-chart').getContext('2d');
+
+        let chart;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = usernameInput.value.trim();
+            if (!username) return alert('Please enter a username.');
+
+            try {
+                const response = await fetch(`https://lichess.org/api/user/${username}/rating-history`);
+                if (!response.ok) throw new Error('Failed to fetch data. Ensure the username is correct.');
+
+                const data = await response.json();
+
+                const availableRatings = data.map((d) => d.name);
+                populateSelector(availableRatings);
+
+                displayGraph(data, ratingTypeSelector.value);
+                ratingTypeSelector.disabled = false;
+
+                ratingTypeSelector.addEventListener('change', () => {
+                    displayGraph(data, ratingTypeSelector.value);
+                });
+            } catch (error) {
+                alert(`Error: ${error.message}`);
             }
-        };
+        });
 
-        // Display player stats
-        function displayStats(data) {
-            const statsDiv = document.getElementById("playerStats");
-            const profile = data.profile;
-
-            statsDiv.innerHTML = `
-                <h3>${profile.realName} (${data.title})</h3>
-                <p><strong>FIDE Rating:</strong> ${profile.fideRating}</p>
-                <p><strong>USCF Rating:</strong> ${profile.uscfRating}</p>
-                <p><strong>Total Games:</strong> ${data.count.all}</p>
-                <p><strong>Wins:</strong> ${data.count.win}</p>
-                <p><strong>Losses:</strong> ${data.count.loss}</p>
-                <p><strong>Draws:</strong> ${data.count.draw}</p>
-                <p><strong>Total Playtime:</strong> ${(data.playTime.total / 3600).toFixed(2)} hours</p>
-                <p><strong>Verified:</strong> ${data.verified ? "Yes" : "No"}</p>
-                <a href="${data.url}" target="_blank">Lichess Profile</a>
-            `;
-        }
-
-        // Render game results chart
-        function renderResultsChart(data) {
-            const ctx = document.getElementById("resultsChart").getContext("2d");
-            new Chart(ctx, {
-                type: "pie",
-                data: {
-                    labels: ["Wins", "Losses", "Draws"],
-                    datasets: [{
-                        data: [data.count.win, data.count.loss, data.count.draw],
-                        backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56"],
-                    }]
-                },
-                options: { responsive: true }
+        function populateSelector(ratingTypes) {
+            ratingTypeSelector.innerHTML = '';
+            ratingTypes.forEach((type) => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                ratingTypeSelector.appendChild(option);
             });
         }
 
-        // Render playtime chart
-        function renderPlaytimeChart(data) {
-            const ctx = document.getElementById("playtimeChart").getContext("2d");
-            new Chart(ctx, {
-                type: "bar",
+        function displayGraph(data, ratingType) {
+            const ratingData = data.find((d) => d.name === ratingType);
+            if (!ratingData) return;
+
+            const labels = ratingData.points.map(([year, month, day]) => 
+                new Date(year, month, day).toLocaleDateString()
+            );
+            const ratings = ratingData.points.map(([, , , rating]) => rating);
+
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: 'line',
                 data: {
-                    labels: ["Total Playtime (hours)", "TV Playtime (hours)"],
+                    labels,
                     datasets: [{
-                        data: [data.playTime.total / 3600, data.playTime.tv / 3600],
-                        backgroundColor: ["#4BC0C0", "#9966FF"],
+                        label: `${ratingType} Ratings`,
+                        data: ratings,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.3
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: "Hours" }
-                        }
+                        x: { title: { display: true, text: 'Date' } },
+                        y: { title: { display: true, text: 'Rating' } }
                     }
                 }
             });
         }
-
-        // Initialize display
-        displayStats(apiData);
-        renderResultsChart(apiData);
-        renderPlaytimeChart(apiData);
     </script>
 </body>
-
 </html>
