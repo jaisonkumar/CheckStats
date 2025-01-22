@@ -1,37 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lichess Player Ratings</title>
+    <title>Player Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="chart-css.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        h1, h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+
+        .chart-container {
+            margin-top: 30px;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Lichess Player Ratings</h1>
-    <form id="username-form">
-        <label for="username">Enter Lichess Username:</label>
-        <input type="text" id="username" required>
-        <button type="submit">Fetch Ratings</button>
-    </form>
+    <div class="container">
+        <h1>Player Analysis</h1>
+        <form id="username-form" class="mb-4">
+            <div class="input-group">
+                <input type="text" id="username" class="form-control" placeholder="Enter Lichess Username" required>
+                <button type="submit" class="btn btn-primary">Fetch Data</button>
+            </div>
+        </form>
 
-    <div id="selector">
-        <label for="rating-type">Select Rating Type:</label>
-        <select id="rating-type" disabled>
-            <option value="Bullet">Bullet</option>
-            <option value="Blitz">Blitz</option>
-            <option value="Rapid">Rapid</option>
-        </select>
+        <div id="playerStats" class="stats-card"></div>
+
+        <!-- Graph Containers -->
+        <div class="chart-container">
+            <h3>Rating History</h3>
+            <select id="rating-type" class="form-select mb-3" disabled>
+                <option value="Bullet">Bullet</option>
+                <option value="Blitz">Blitz</option>
+                <option value="Rapid">Rapid</option>
+            </select>
+            <canvas id="rating-chart"></canvas>
+        </div>
     </div>
-
-    <canvas id="rating-chart"></canvas>
 
     <script>
         const form = document.getElementById('username-form');
         const usernameInput = document.getElementById('username');
+        const statsDiv = document.getElementById('playerStats');
         const ratingTypeSelector = document.getElementById('rating-type');
         const ctx = document.getElementById('rating-chart').getContext('2d');
-
         let chart;
 
         form.addEventListener('submit', async (e) => {
@@ -40,31 +78,45 @@
             if (!username) return alert('Please enter a username.');
 
             try {
-                const response = await fetch(`https://lichess.org/api/user/${username}/rating-history`);
-                if (!response.ok) throw new Error('Failed to fetch data. Ensure the username is correct.');
+                // Fetch player data
+                const userResponse = await fetch(`https://lichess.org/api/user/${username}`);
+                if (!userResponse.ok) throw new Error('Invalid username or failed to fetch user data.');
+                const userData = await userResponse.json();
 
-                const data = await response.json();
+                // Fetch rating history
+                const ratingResponse = await fetch(`https://lichess.org/api/user/${username}/rating-history`);
+                if (!ratingResponse.ok) throw new Error('Failed to fetch rating history.');
+                const ratingData = await ratingResponse.json();
 
-                const availableRatings = data.map((d) => d.name);
-                populateSelector(availableRatings);
+                displayStats(userData);
+                populateSelector(ratingData);
+                displayGraph(ratingData, ratingTypeSelector.value);
 
-                displayGraph(data, ratingTypeSelector.value);
                 ratingTypeSelector.disabled = false;
-
                 ratingTypeSelector.addEventListener('change', () => {
-                    displayGraph(data, ratingTypeSelector.value);
+                    displayGraph(ratingData, ratingTypeSelector.value);
                 });
             } catch (error) {
                 alert(`Error: ${error.message}`);
             }
         });
 
+        function displayStats(data) {
+            statsDiv.innerHTML = `
+                <h3>${data.username} (${data.title || 'No Title'})</h3>
+                <p><strong>Profile:</strong> <a href="${data.url}" target="_blank">View on Lichess</a></p>
+                <p><strong>Created At:</strong> ${new Date(data.createdAt).toLocaleDateString()}</p>
+                <p><strong>Games Played:</strong> ${data.count.all || 'N/A'}</p>
+                <p><strong>Followers:</strong> ${data.nbFollowers || 'N/A'}</p>
+            `;
+        }
+
         function populateSelector(ratingTypes) {
             ratingTypeSelector.innerHTML = '';
             ratingTypes.forEach((type) => {
                 const option = document.createElement('option');
-                option.value = type;
-                option.textContent = type;
+                option.value = type.name;
+                option.textContent = type.name;
                 ratingTypeSelector.appendChild(option);
             });
         }
@@ -73,7 +125,7 @@
             const ratingData = data.find((d) => d.name === ratingType);
             if (!ratingData) return;
 
-            const labels = ratingData.points.map(([year, month, day]) => 
+            const labels = ratingData.points.map(([year, month, day]) =>
                 new Date(year, month, day).toLocaleDateString()
             );
             const ratings = ratingData.points.map(([, , , rating]) => rating);
@@ -90,7 +142,6 @@
                         borderColor: 'rgba(75, 192, 192, 1)',
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderWidth: 2,
-                        pointRadius: 0,
                         tension: 0.3
                     }]
                 },
@@ -106,4 +157,5 @@
         }
     </script>
 </body>
+
 </html>
