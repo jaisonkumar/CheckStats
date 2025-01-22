@@ -51,16 +51,8 @@
             <canvas id="timeControlChart"></canvas>
         </div>
         <div class="chart-container">
-            <h3>Games Played Per Year</h3>
-            <canvas id="gamesPerYearChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <h3>Win/Loss/Draw Percentages</h3>
-            <canvas id="winLossChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <h3>Color Performance (White vs Black)</h3>
-            <canvas id="colorPerformanceChart"></canvas>
+            <h3>Game Results Over Time (Win/Loss/Draw)</h3>
+            <canvas id="gameResultsOverTimeChart"></canvas>
         </div>
     </div>
 
@@ -130,61 +122,31 @@
                 Correspondence: data.perfs.correspondence ? data.perfs.correspondence.games : 0
             };
 
-            const yearsData = calculateGamesPerYear(games);
-            const winLossData = calculateWinLoss(games);
-            const colorPerformance = calculateColorPerformance(games);
-
-            console.log("Color Performance Data:", colorPerformance); // Log the data to debug
+            const gameResultsOverTime = calculateGameResultsOverTime(games);
 
             renderTimeControlChart(timeControls);
-            renderGamesPerYearChart(yearsData);
-            renderWinLossChart(winLossData);
-            renderColorPerformanceChart(colorPerformance);
+            renderGameResultsOverTimeChart(gameResultsOverTime);
         }
 
-        function calculateGamesPerYear(games) {
-            const yearCounts = {};
+        function calculateGameResultsOverTime(games) {
+            const resultsOverTime = {};
             games.forEach(game => {
                 const date = new Date(game.date);
                 const year = date.getFullYear();
-                if (!yearCounts[year]) {
-                    yearCounts[year] = 0;
+                const month = date.getMonth() + 1; // Get the month (1-12)
+                const yearMonth = `${year}-${month < 10 ? '0' + month : month}`;
+
+                if (!resultsOverTime[yearMonth]) {
+                    resultsOverTime[yearMonth] = { Win: 0, Loss: 0, Draw: 0 };
                 }
-                yearCounts[year]++;
-            });
-            console.log("Games Per Year Data:", yearCounts); // Debugging log
-            return yearCounts;
-        }
 
-        function calculateWinLoss(games) {
-            const results = { Win: 0, Loss: 0, Draw: 0 };
-            games.forEach(game => {
-                if (game.result === "1-0") results.Win++;
-                else if (game.result === "0-1") results.Loss++;
-                else if (game.result === "1/2-1/2") results.Draw++;
+                if (game.result === "1-0") resultsOverTime[yearMonth].Win++;
+                else if (game.result === "0-1") resultsOverTime[yearMonth].Loss++;
+                else if (game.result === "1/2-1/2") resultsOverTime[yearMonth].Draw++;
             });
 
-            // Calculate percentages
-            const totalGames = results.Win + results.Loss + results.Draw;
-            if (totalGames > 0) {
-                results.WinPercentage = (results.Win / totalGames) * 100;
-                results.LossPercentage = (results.Loss / totalGames) * 100;
-                results.DrawPercentage = (results.Draw / totalGames) * 100;
-            } else {
-                results.WinPercentage = results.LossPercentage = results.DrawPercentage = 0;
-            }
-
-            console.log("Win/Loss Data:", results); // Debugging log
-            return results;
-        }
-
-        function calculateColorPerformance(games) {
-            const colors = { White: 0, Black: 0 };
-            games.forEach(game => {
-                colors[game.color]++;
-            });
-            console.log("Calculated Color Performance:", colors); // Debugging log
-            return colors;
+            console.log("Game Results Over Time:", resultsOverTime); // Debugging log
+            return resultsOverTime;
         }
 
         function renderTimeControlChart(data) {
@@ -203,54 +165,54 @@
             });
         }
 
-        function renderGamesPerYearChart(data) {
-            const ctx = document.getElementById('gamesPerYearChart').getContext('2d');
+        function renderGameResultsOverTimeChart(data) {
+            const months = Object.keys(data);
+            const wins = months.map(month => data[month].Win);
+            const losses = months.map(month => data[month].Loss);
+            const draws = months.map(month => data[month].Draw);
+
+            const ctx = document.getElementById('gameResultsOverTimeChart').getContext('2d');
             new Chart(ctx, {
-                type: 'bar',
+                type: 'line',
                 data: {
-                    labels: Object.keys(data),
-                    datasets: [{
-                        label: 'Games Played Per Year',
-                        data: Object.values(data),
-                        backgroundColor: '#36A2EB',
-                    }]
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Wins',
+                            data: wins,
+                            borderColor: '#36A2EB',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Losses',
+                            data: losses,
+                            borderColor: '#FF6384',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Draws',
+                            data: draws,
+                            borderColor: '#FFCE56',
+                            fill: false,
+                            tension: 0.1
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
-                    scales: { y: { beginAtZero: true } }
+                    scales: {
+                        x: {
+                            type: 'category',
+                            title: { display: true, text: 'Month-Year' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Games' }
+                        }
+                    }
                 }
-            });
-        }
-
-        function renderWinLossChart(data) {
-            const ctx = document.getElementById('winLossChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Wins', 'Losses', 'Draws'],
-                    datasets: [{
-                        label: 'Win/Loss/Draw Distribution',
-                        data: [data.WinPercentage, data.LossPercentage, data.DrawPercentage],
-                        backgroundColor: ['#4BC0C0', '#FF6384', '#FFCE56'],
-                    }]
-                },
-                options: { responsive: true }
-            });
-        }
-
-        function renderColorPerformanceChart(data) {
-            const ctx = document.getElementById('colorPerformanceChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['White', 'Black'],
-                    datasets: [{
-                        label: 'Performance by Color',
-                        data: [data.White, data.Black],
-                        backgroundColor: ['#36A2EB', '#9966FF'],
-                    }]
-                },
-                options: { responsive: true }
             });
         }
     </script>
