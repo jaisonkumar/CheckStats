@@ -37,124 +37,200 @@
         .chart-container {
             margin-top: 30px;
         }
+
+        .chart-container canvas {
+            width: 100%;
+            height: 400px;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <h1>Player Analysis</h1>
-        <form id="username-form" class="mb-4">
-            <div class="input-group">
-                <input type="text" id="username" class="form-control" placeholder="Enter Lichess Username" required>
-                <button type="submit" class="btn btn-primary">Fetch Data</button>
-            </div>
-        </form>
-
         <div id="playerStats" class="stats-card"></div>
 
         <!-- Graph Containers -->
         <div class="chart-container">
-            <h3>Rating History</h3>
-            <select id="rating-type" class="form-select mb-3" disabled>
-                <option value="Bullet">Bullet</option>
-                <option value="Blitz">Blitz</option>
-                <option value="Rapid">Rapid</option>
-            </select>
-            <canvas id="rating-chart"></canvas>
+            <h3>Game Results Distribution</h3>
+            <canvas id="resultsChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Playtime Distribution</h3>
+            <canvas id="playtimeChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Rating History (Monthly Average)</h3>
+            <canvas id="ratingHistoryChart"></canvas>
         </div>
     </div>
 
     <script>
-        const form = document.getElementById('username-form');
-        const usernameInput = document.getElementById('username');
-        const statsDiv = document.getElementById('playerStats');
-        const ratingTypeSelector = document.getElementById('rating-type');
-        const ctx = document.getElementById('rating-chart').getContext('2d');
-        let chart;
+        const apiData = {
+            count: {
+                all: 9265,
+                rated: 7157,
+                ai: 531,
+                draw: 340,
+                drawH: 331,
+                loss: 4480,
+                lossH: 4207,
+                win: 4440,
+                winH: 4378,
+                bookmark: 71,
+                playing: 6,
+                import: 66,
+                me: 0
+            },
+            seenAt: 1522636452014,
+            patron: true,
+            verified: true,
+            playTime: {
+                total: 3296897,
+                tv: 12134
+            },
+            title: "NM",
+            url: "https://lichess.org/@/georges",
+            playing: "https://lichess.org/yqfLYJ5E/black",
+            profile: {
+                flag: "EC",
+                location: "string",
+                bio: "Free bugs!",
+                realName: "Thibault Duplessis",
+                fideRating: 1500,
+                uscfRating: 1500,
+                ecfRating: 1500,
+                cfcRating: 1500,
+                dsbRating: 1500,
+                links: "github.com/ornicar\r\nmas.to/@thibault"
+            },
+            ratingHistory: [
+                { name: "FIDE", points: [[2022, 0, 1, 2200], [2022, 1, 15, 2150], [2022, 3, 10, 2170], [2022, 6, 1, 2220], [2022, 8, 10, 2250]] },
+                { name: "USCF", points: [[2022, 0, 1, 2100], [2022, 3, 5, 2150], [2022, 5, 15, 2120], [2022, 8, 20, 2130]] },
+            ]
+        };
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = usernameInput.value.trim();
-            if (!username) return alert('Please enter a username.');
-
-            try {
-                // Fetch player data
-                const userResponse = await fetch(`https://lichess.org/api/user/${username}`);
-                if (!userResponse.ok) throw new Error('Invalid username or failed to fetch user data.');
-                const userData = await userResponse.json();
-
-                // Fetch rating history
-                const ratingResponse = await fetch(`https://lichess.org/api/user/${username}/rating-history`);
-                if (!ratingResponse.ok) throw new Error('Failed to fetch rating history.');
-                const ratingData = await ratingResponse.json();
-
-                displayStats(userData);
-                populateSelector(ratingData);
-                displayGraph(ratingData, ratingTypeSelector.value);
-
-                ratingTypeSelector.disabled = false;
-                ratingTypeSelector.addEventListener('change', () => {
-                    displayGraph(ratingData, ratingTypeSelector.value);
-                });
-            } catch (error) {
-                alert(`Error: ${error.message}`);
-            }
-        });
-
+        // Display player stats
         function displayStats(data) {
+            const statsDiv = document.getElementById("playerStats");
+            const profile = data.profile;
+
             statsDiv.innerHTML = `
-                <h3>${data.username} (${data.title || 'No Title'})</h3>
-                <p><strong>Profile:</strong> <a href="${data.url}" target="_blank">View on Lichess</a></p>
-                <p><strong>Created At:</strong> ${new Date(data.createdAt).toLocaleDateString()}</p>
-                <p><strong>Games Played:</strong> ${data.count.all || 'N/A'}</p>
-                <p><strong>Followers:</strong> ${data.nbFollowers || 'N/A'}</p>
+                <h3>${profile.realName} (${data.title})</h3>
+                <p><strong>FIDE Rating:</strong> ${profile.fideRating}</p>
+                <p><strong>USCF Rating:</strong> ${profile.uscfRating}</p>
+                <p><strong>Total Games:</strong> ${data.count.all}</p>
+                <p><strong>Wins:</strong> ${data.count.win}</p>
+                <p><strong>Losses:</strong> ${data.count.loss}</p>
+                <p><strong>Draws:</strong> ${data.count.draw}</p>
+                <p><strong>Total Playtime:</strong> ${(data.playTime.total / 3600).toFixed(2)} hours</p>
+                <p><strong>Verified:</strong> ${data.verified ? "Yes" : "No"}</p>
+                <a href="${data.url}" target="_blank">Lichess Profile</a>
             `;
         }
 
-        function populateSelector(ratingTypes) {
-            ratingTypeSelector.innerHTML = '';
-            ratingTypes.forEach((type) => {
-                const option = document.createElement('option');
-                option.value = type.name;
-                option.textContent = type.name;
-                ratingTypeSelector.appendChild(option);
+        // Render game results chart
+        function renderResultsChart(data) {
+            const ctx = document.getElementById("resultsChart").getContext("2d");
+            new Chart(ctx, {
+                type: "pie",
+                data: {
+                    labels: ["Wins", "Losses", "Draws"],
+                    datasets: [{
+                        data: [data.count.win, data.count.loss, data.count.draw],
+                        backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56"],
+                    }]
+                },
+                options: { responsive: true }
             });
         }
 
+        // Render playtime chart
+        function renderPlaytimeChart(data) {
+            const ctx = document.getElementById("playtimeChart").getContext("2d");
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: ["Total Playtime (hours)", "TV Playtime (hours)"],
+                    datasets: [{
+                        data: [data.playTime.total / 3600, data.playTime.tv / 3600],
+                        backgroundColor: ["#4BC0C0", "#9966FF"],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: "Hours" }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Display graph for rating history (monthly averages)
         function displayGraph(data, ratingType) {
-            const ratingData = data.find((d) => d.name === ratingType);
+            const ratingData = data.ratingHistory.find((d) => d.name === ratingType);
             if (!ratingData) return;
 
-            const labels = ratingData.points.map(([year, month, day]) =>
-                new Date(year, month, day).toLocaleDateString()
+            const monthlyData = {};
+            ratingData.points.forEach(([year, month, day, rating]) => {
+                const key = `${year}-${String(month + 1).padStart(2, '0')}`;
+                if (!monthlyData[key]) monthlyData[key] = [];
+                monthlyData[key].push(rating);
+            });
+
+            const labels = Object.keys(monthlyData).sort();
+            const ratings = labels.map(
+                (key) => Math.round(monthlyData[key].reduce((sum, r) => sum + r, 0) / monthlyData[key].length)
             );
-            const ratings = ratingData.points.map(([, , , rating]) => rating);
 
-            if (chart) chart.destroy();
-
-            chart = new Chart(ctx, {
+            const ctx = document.getElementById("ratingHistoryChart").getContext("2d");
+            new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
                     datasets: [{
-                        label: `${ratingType} Ratings`,
+                        label: `${ratingType} Ratings (Monthly Average)`,
                         data: ratings,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderWidth: 2,
-                        tension: 0.3
+                        borderColor: '#36A2EB',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#FF6384',
+                        tension: 0.4,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: { enabled: true },
+                    },
                     scales: {
-                        x: { title: { display: true, text: 'Date' } },
-                        y: { title: { display: true, text: 'Rating' } }
+                        x: {
+                            title: { display: true, text: 'Month', font: { size: 14 } },
+                            grid: { display: false },
+                            ticks: { autoSkip: true, maxTicksLimit: 12 },
+                        },
+                        y: {
+                            title: { display: true, text: 'Rating', font: { size: 14 } },
+                            grid: { color: 'rgba(200, 200, 200, 0.3)' },
+                        }
                     }
                 }
             });
         }
+
+        // Initialize display
+        displayStats(apiData);
+        renderResultsChart(apiData);
+        renderPlaytimeChart(apiData);
+        displayGraph(apiData, "FIDE");
+
     </script>
 </body>
 
