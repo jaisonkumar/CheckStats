@@ -45,14 +45,22 @@
         <h1>Player Analysis</h1>
         <div id="playerStats" class="stats-card"></div>
 
+        <!-- Graph Containers -->
         <div class="chart-container">
             <h3>Time Controls Distribution</h3>
             <canvas id="timeControlChart"></canvas>
         </div>
-
         <div class="chart-container">
             <h3>Games Played Per Year</h3>
             <canvas id="gamesPerYearChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Win/Loss/Draw Percentages</h3>
+            <canvas id="winLossChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Color Performance (White vs Black)</h3>
+            <canvas id="colorPerformanceChart"></canvas>
         </div>
     </div>
 
@@ -73,7 +81,7 @@
                     return response.json();
                 })
                 .then(data => {
-                    fetch(`https://lichess.org/api/games/user/${username}?max=200&opening=false`) // Limited fetch for games (can be expanded)
+                    fetch(`https://lichess.org/api/games/user/${username}?max=200&opening=false`) // Fetch a limited number of games
                         .then(gamesResponse => gamesResponse.text())
                         .then(gamesData => {
                             const games = parseGames(gamesData);
@@ -94,7 +102,9 @@
                 if (lines[i].startsWith("[Event")) {
                     const timeControl = lines[i + 1].match(/"([^"]+)"/)[1]; // Extract Time Control
                     const date = lines[i + 4].match(/"([^"]+)"/)[1]; // Extract Date
-                    games.push({ timeControl, date });
+                    const result = lines[i + 6].match(/"([^"]+)"/)[1]; // Extract Result
+                    const color = lines[i + 7].includes("White") ? "White" : "Black";
+                    games.push({ timeControl, date, result, color });
                 }
             }
             return games;
@@ -107,6 +117,7 @@
                 <p><strong>Total Games:</strong> ${data.count.all}</p>
                 <p><strong>Wins:</strong> ${data.count.win || 0}</p>
                 <p><strong>Losses:</strong> ${data.count.loss || 0}</p>
+                <p><strong>Draws:</strong> ${data.count.draw || 0}</p>
                 <p><strong>Time Controls:</strong> Bullet: ${data.perfs.bullet.games || 0}, Blitz: ${data.perfs.blitz.games || 0}, 
                 Rapid: ${data.perfs.rapid.games || 0}, Classical: ${data.perfs.classical.games || 0}</p>
             `;
@@ -120,9 +131,13 @@
             };
 
             const yearsData = calculateGamesPerYear(games);
+            const winLossData = calculateWinLoss(games);
+            const colorPerformance = calculateColorPerformance(games);
 
             renderTimeControlChart(timeControls);
             renderGamesPerYearChart(yearsData);
+            renderWinLossChart(winLossData);
+            renderColorPerformanceChart(colorPerformance);
         }
 
         function calculateGamesPerYear(games) {
@@ -137,6 +152,24 @@
             return yearCounts;
         }
 
+        function calculateWinLoss(games) {
+            const results = { Win: 0, Loss: 0, Draw: 0 };
+            games.forEach(game => {
+                if (game.result === "1-0") results.Win++;
+                else if (game.result === "0-1") results.Loss++;
+                else if (game.result === "1/2-1/2") results.Draw++;
+            });
+            return results;
+        }
+
+        function calculateColorPerformance(games) {
+            const colors = { White: 0, Black: 0 };
+            games.forEach(game => {
+                colors[game.color]++;
+            });
+            return colors;
+        }
+
         function renderTimeControlChart(data) {
             const ctx = document.getElementById('timeControlChart').getContext('2d');
             new Chart(ctx, {
@@ -149,9 +182,7 @@
                         backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
                     }]
                 },
-                options: {
-                    responsive: true,
-                }
+                options: { responsive: true }
             });
         }
 
@@ -169,12 +200,40 @@
                 },
                 options: {
                     responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                        }
-                    }
+                    scales: { y: { beginAtZero: true } }
                 }
+            });
+        }
+
+        function renderWinLossChart(data) {
+            const ctx = document.getElementById('winLossChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        label: 'Win/Loss/Draw Distribution',
+                        data: Object.values(data),
+                        backgroundColor: ['#4BC0C0', '#FF6384', '#FFCE56'],
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        function renderColorPerformanceChart(data) {
+            const ctx = document.getElementById('colorPerformanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        label: 'Performance by Color',
+                        data: Object.values(data),
+                        backgroundColor: ['#36A2EB', '#9966FF'],
+                    }]
+                },
+                options: { responsive: true }
             });
         }
     </script>
