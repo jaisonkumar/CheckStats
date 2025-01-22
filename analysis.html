@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Analysis</title>
+    <link rel="stylesheet" href="final.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="bg">
+        <nav>
+            <a href="/"><div class="nav-logo"></div></a>
+            <div class="nav-items">
+                <div class="nav-about"><a href="#about">ABOUT</a></div>
+                <div class="nav-contact"><a href="#contact">CONTACT US</a></div>
+            </div>
+        </nav>
+
+        <div id="analysis">
+            <h1>Player Analysis</h1>
+            <div id="playerStats"></div>
+            <canvas id="gamesChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Extract the username from the query parameters
+        const params = new URLSearchParams(window.location.search);
+        const username = params.get('username');
+
+        if (!username) {
+            alert("No username provided. Redirecting to the homepage.");
+            window.location.href = "/";
+        } else {
+            fetch(`https://lichess.org/api/user/${username}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("User not found.");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    displayAnalysis(data);
+                })
+                .catch(error => {
+                    alert(error.message);
+                    window.location.href = "/";
+                });
+        }
+
+        function displayAnalysis(data) {
+            const statsDiv = document.getElementById('playerStats');
+            statsDiv.innerHTML = `
+                <p><strong>Username:</strong> ${data.username}</p>
+                <p><strong>Total Games:</strong> ${data.count.all}</p>
+                <p><strong>Wins:</strong> ${data.count.win || 0}</p>
+                <p><strong>Losses:</strong> ${data.count.loss || 0}</p>
+            `;
+
+            const ctx = document.getElementById('gamesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Total Games', 'Wins', 'Losses'],
+                    datasets: [{
+                        label: 'Games Analysis',
+                        data: [data.count.all, data.count.win || 0, data.count.loss || 0],
+                        backgroundColor: ['blue', 'green', 'red'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

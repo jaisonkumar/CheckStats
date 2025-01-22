@@ -1,86 +1,55 @@
-document.getElementById('userDataForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-  
+document.getElementById('fetchData').addEventListener('click', () => {
     const username = document.getElementById('username').value.trim();
-  
-    if (username === '') {
-      alert('Please enter a username.');
-      return;
+    if (!username) {
+        alert("Please enter a Lichess username.");
+        return;
     }
-  
-    const userInfoUrl = `https://lichess.org/api/user/${username}`;
-  
-    fetch(userInfoUrl)
-      .then(response => response.json())
-      .then(userInfo => {
-        displayUserData(userInfo);
-      })
-      .catch(error => {
-        console.error('Error fetching user data:', error);
-        const userDataContainer = document.getElementById('userData');
-        userDataContainer.innerHTML = `<p class="error">Error fetching user data for ${username}.</p>`;
-      });
-  });
-  
-  function displayUserData(userData) {
-    const { id, username, createdAt, perfs } = userData;
-  
-    const formattedCreatedAt = new Date(createdAt).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  
-    let userStatsHtml = `
-      <h2>User Information:</h2>
-      <p><strong>ID:</strong> ${id}</p>
-      <p><strong>Username:</strong> ${username}</p>
-      <p><strong>Join Date:</strong> ${formattedCreatedAt}</p>
-      <h3>Performance Ratings:</h3>
-      <ul>
+
+    const apiUrl = `https://lichess.org/api/user/${username}`;
+
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("User not found.");
+            }
+            return response.json();
+        })
+        .then(data => {
+            displayAnalysis(data);
+        })
+        .catch(error => {
+            alert(error.message);
+        });
+});
+
+function displayAnalysis(data) {
+    const statsDiv = document.getElementById('playerStats');
+    statsDiv.innerHTML = `
+        <p><strong>Username:</strong> ${data.username}</p>
+        <p><strong>Total Games:</strong> ${data.count.all}</p>
+        <p><strong>Wins:</strong> ${data.count.win || 0}</p>
+        <p><strong>Losses:</strong> ${data.count.loss || 0}</p>
     `;
-  
-    if (perfs) {
-      userStatsHtml += generatePerfHtml(perfs.bullet, 'Bullet');
-      userStatsHtml += generatePerfHtml(perfs.blitz, 'Blitz');
-      userStatsHtml += generatePerfHtml(perfs.rapid, 'Rapid');
-      userStatsHtml += generatePerfHtml(perfs.classical, 'Classical');
-    } else {
-      userStatsHtml += `
-        <li><strong>Bullet:</strong> N/A</li>
-        <li><strong>Blitz:</strong> N/A</li>
-        <li><strong>Rapid:</strong> N/A</li>
-        <li><strong>Classical:</strong> N/A</li>
-      `;
-    }
-  
-    userStatsHtml += `</ul>`;
-  
-    const userDataContainer = document.getElementById('userData');
-    userDataContainer.innerHTML = userStatsHtml;
-    const backButton = document.getElementById('backButton');
-    backButton.classList.remove('hidden');
-  }
-  
-  function generatePerfHtml(perf, label) {
-    if (perf) {
-      const winPercentage = perf.games > 0 ? ((perf.win / perf.games) * 100).toFixed(2) : 'N/A';
-      return `
-        <li><strong>${label}:</strong> ${perf.rating}</li>
-        <li><strong>${label} Win/Loss Percentage:</strong> ${winPercentage}%</li>
-      `;
-    } else {
-      return `
-        <li><strong>${label}:</strong> N/A</li>
-        <li><strong>${label} Win/Loss Percentage:</strong> N/A</li>
-      `;
-    }
-  }
-  
-  function goBack() {
-    const userDataContainer = document.getElementById('userData');
-    userDataContainer.innerHTML = '';
-    const backButton = document.getElementById('backButton');
-    backButton.classList.add('hidden');
-  }
-  
+
+    const ctx = document.getElementById('gamesChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Total Games', 'Wins', 'Losses'],
+            datasets: [{
+                label: 'Games Analysis',
+                data: [data.count.all, data.count.win || 0, data.count.loss || 0],
+                backgroundColor: ['blue', 'green', 'red'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
