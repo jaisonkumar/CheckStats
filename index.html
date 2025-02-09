@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-Compatible" content="IE=edge">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Website</title>
     <link rel="stylesheet" href="final.css">
@@ -27,13 +27,9 @@
             <p class="main-text">Unlock insights into your chess journey with our detailed analysis!</p>
             <p class="side-text">Discover your strengths, track your progress, and elevate your game. Dive into personalized statistics and make every move count!</p>
             <div class="form-group">
-                <a href="#" class="myButton">Continue with Lichess</a>
-                <p class="side-text or-text">Or</p>
+                <a href="www.analysis.checkstats.site" class="myButton">Analysis</a>
             </div>
-            <div class="input-group">
-                <input id="username" class="input" type="text" placeholder="Enter Your Username">
-                <a href="#" id="redirectToAnalysis" class="goButton">Go</a>
-            </div>
+            
         </div>
 
         <div id="about">
@@ -53,7 +49,6 @@
                 alert("Please enter a Lichess username.");
                 return;
             }
-            // Redirect to the analysis page with the username as a query parameter
             window.location.href = `/analysis?username=${encodeURIComponent(username)}`;
         });
     </script>
